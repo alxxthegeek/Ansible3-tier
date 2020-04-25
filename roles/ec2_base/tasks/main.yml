@@ -1,0 +1,129 @@
+---
+# tasks file for ec2_base
+
+- name: Create a new EC2 key
+  ec2_key:
+    name: "{{ keypair }}"
+    region: "{{ region }}"
+  register: ec2_key_result
+
+- name: Save private key
+  copy: content="{{ ec2_key_result.key.private_key }}" dest="~/.ssh/{{ keypair }}.pem" mode=0600
+  when: ec2_key_result.changed
+  
+- name: create VPC
+  ec2_vpc_net:
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_cidr }}"
+    region: "{{ region }}"
+    state: present
+  register: vpc
+  
+- name: Set VPC ID in variable
+  set_fact:
+    vpc_id: "{{ vpc.vpc.id }}"  
+    
+- name: Create and associate subnet to the VPC
+  ec2_vpc_subnet:
+   state: present
+   vpc_id: "{{ vpc_id }}"
+   region: "{{ region }}"
+   cidr: "{{ subnet_cidr }}"    
+   map_public: yes
+   resource_tags:
+     Name: "{{ subnet_name }}"
+  register: subnet    
+  
+
+- name: create IGW
+  ec2_vpc_igw:
+   vpc_id: "{{ vpc_id }}"
+   region: "{{ region }}"
+   state: "present"
+   tags:
+     Name: "{{ igw_name }}"
+  register: igw  
+   
+ 
+- name: Create IGW Routes
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region }}"
+    subnets:
+      - "{{ subnet.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id  }}"
+    tags:
+     Name: "{{ route_name }}"
+     Name: "Public"
+
+
+- name: Create a security group
+  local_action: 
+    module: ec2_group
+    name: "{{ security_group_name }}"
+    description: Security Group for Web Servers
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+    rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+  register: security_group
+  
+- name: Launch the new EC2 Instance
+  local_action: ec2 
+                image={{ image }} 
+                instance_type={{ instance_type }}
+                vpc_subnet_id={{ subnet.subnet.id }}  
+                group_id={{ security_group.group_id }}
+                group={{ security_group_name }}
+                wait=true 
+                wait_timeout=500
+                region={{ region }} 
+                keypair={{ keypair }}
+                monitoring=yes
+                count={{ webServerCount }}
+  register: ec2
+
+
+# Wait for instance to be available before proceeding with playbook
+- name: Wait for SSH to come up before proceeding
+  local_action: wait_for 
+                host={{ item.public_ip }} 
+                port=22 
+                state=started
+  with_items: "{{ ec2.instances }}"
+
+- name: Add tag to Instance(s)
+  local_action: ec2_tag resource={{ item.id }} region={{ region }} state=present
+  with_items: "{{ ec2.instances }}"
+  args:
+    tags:
+      Name: webserver
+
+- name: Add host to inventory
+  add_host:
+    hostname: "{{ item.public_ip }}"
+    groupname: launched
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+    ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file }}"
+    ansible_ssh_user: "{{ ansible_ssh_user }}"
+  loop: "{{ ec2.instances }}"  
+
+- name: accept new ssh fingerprints
+  shell: ssh-keyscan -H {{ item.public_ip }} >> ~/.ssh/known_hosts
+  with_items: "{{ ec2.instances }}"

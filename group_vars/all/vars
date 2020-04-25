@@ -1,0 +1,37 @@
+---
+
+region: ap-southeast-2
+
+#VPC
+vpc_cidr: 10.10.0.0/24
+vpc_name: "ThreeTier"
+
+#SUBNET
+subnet_name: "Webserver Subnet"
+subnet_cidr: 10.10.0.0/26
+
+#GATEWAY
+igw_name: "Public IGW"
+
+#route table name
+route_name: "Public Webserver Access"
+
+#Security Groups
+security_group_name: "public-webserver" 
+
+#EC2
+instance_type: "t3.medium"
+webServerCount: 1
+image: ami-0970010f37c4f9c8d  # Amazon Linux2 in ap-southeast-2 -  ami-0970010f37c4f9c8d (64-bit x86) 
+
+
+keypair: awskeykey 
+
+# key : "~/.ssh/id_rsa.pub"
+
+ansible_ssh_private_key_file: "~/.ssh/awskeykey.pem"
+ansible_ssh_user: ec2-user
+
+#DNS
+domain_name: www.techops.com
+domain: techops

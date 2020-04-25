@@ -1,0 +1,30 @@
+---
+  - name: Provision 3Tier Web App
+    hosts: local
+    # ec2 instance, deploy Ansible and create AMI    
+    connection: local
+    gather_facts: False
+    tags: provisioning     
+    
+    # Role that will be used to Launch/Create an EC2 Instance
+    roles:
+    - {role: ec2_base}
+
+  - name: Install common_linux and webserver roles
+    hosts: launched
+    become: True
+    gather_facts: True
+    vars:
+      ansible_ssh_common_args: "-o StrictHostKeyChecking=no"      
+      ansible_ssh_user: "ec2-user"
+      domain_name: www.testops.com
+      domain: testops
+      http_conf: testops.conf
+      http_port: 80
+      disable_default: true
+    roles:
+      - {role: common_linux}
+      - {role: webserver}
+
+
+

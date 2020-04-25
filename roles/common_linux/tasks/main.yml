@@ -1,0 +1,52 @@
+---
+# tasks file for common_linux
+
+### EPEL repo
+
+- name: Ensure epel repo present
+  yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+
+### Standard packages
+
+- name: Ensure common packages present acl
+  yum:
+    name: acl
+    state: present
+
+- name: Ensure common packages present screen
+  yum:
+    name: screen
+    state: present
+
+- name: Ensure common packages present bash-completion
+  yum:
+    name: bash-completion
+    state: present
+
+- name: Ensure common packages present dos2unix
+  yum:
+    name: dos2unix
+    state: present
+
+- name: Ensure common packages present htop
+  yum:
+    name: htop
+    state: present
+
+- name: Ensure common packages present mlocate
+  yum:
+    name: mlocate
+    state: present
+
+- name: Ensure common packages present unzip
+  yum:
+    name: unzip
+    state: present
+
+- name: Ensure common packages present wget
+  yum:
+    name: wget
+    state: present
+
