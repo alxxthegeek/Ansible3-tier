@@ -1,6 +1,11 @@
 ---
 
 region: ap-southeast-2
+zone_1: ap-southeast-2a
+zone_2: ap-southeast-2b
+zone_3: ap-southeast-2c
+
+region: ap-southeast-2
 
 #VPC
 vpc_cidr: 10.10.0.0/24
@@ -24,10 +29,7 @@ instance_type: "t3.medium"
 webServerCount: 1
 image: ami-0970010f37c4f9c8d  # Amazon Linux2 in ap-southeast-2 -  ami-0970010f37c4f9c8d (64-bit x86) 
 
-
 keypair: awskeykey 
-
-# key : "~/.ssh/id_rsa.pub"
 
 ansible_ssh_private_key_file: "~/.ssh/awskeykey.pem"
 ansible_ssh_user: ec2-user
