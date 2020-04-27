@@ -123,8 +123,8 @@
 - name: Create ELB Security Group
   local_action: 
     module: ec2_group
-    name:  "{{ vpc_name }}-WebServer-ELB SG"
-    description: "{{ vpc_name }}-WebServer-el security group "
+    name:  "{{ vpc_name }}-Public-ELB SG"
+    description: "{{ vpc_name }}-Public-ELB security group "
     vpc_id: "{{ vpc_id }}"
     region: "{{ region }}"
     rules:
@@ -141,7 +141,6 @@
 - name: create_elb Set the elb security group id as facts
   set_fact:
     elb_security_group: "{{ elb_sec_group.group_id }}"
-
 
 - name: Create the ELB only listening over port 80
   ec2_elb_lb:
@@ -175,21 +174,21 @@
     module: ec2
     image: "{{ image }}"
     instance_type: "{{ instance_type }}"
-    vpc_subnet_id:
-      - "{{ public_subnet_1 }}"
-      - "{{ public_subnet_2 }}"
-      - "{{ public_subnet_3 }}"
+    region: "{{ region }}"
     group_id:
       - "{{ security_group.group_id }}"
       - "{{ elb_security_group }}"
-    group: "{{ security_group_name }}"
     wait: yes
     instance_tags:
-          application: webserver
-    region: "{{ region }}"
+          application: "{{ vpc_name }}-public-webserver"
     keypair: "{{ keypair }}"
     monitoring: yes
     count: "{{ webServerCount }}"
+    vpc_subnet_id: "{{ item }} "
+  with_items:
+    - "{{ public_subnet_1 }}"
+    - "{{ public_subnet_2 }}"
+    - "{{ public_subnet_3 }}"
   register: ec2
 
 - name: Wait for SSH to come up
@@ -197,7 +196,7 @@
   wait_for_connection:
     delay: 60
     timeout: 320
-  loop: "{{ ec2.instances }}"
+  loop: "{{ ec2.instance_ids }}"
 
 - name: accept new ssh fingerprints
   shell: ssh-keyscan -H {{ item.public_ip }} >> ~/.ssh/known_hosts
@@ -211,7 +210,7 @@
     state: present
     tags:
       Name: "webserver"
-  with_items: "{{ ec2.instances }}"
+  with_items: "{{ ec2.instance_ids }}"
 
 - name: Add host to inventory
   add_host:
