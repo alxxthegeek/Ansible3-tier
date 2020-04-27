@@ -13,9 +13,9 @@ Role Variables
 
       ansible_ssh_common_args: "-o StrictHostKeyChecking=no"      
       ansible_ssh_user: "ec2-user"
-      domain_name: www.qantastechops.com
-      domain: qantastechops
-      http_conf: qantastechops.conf
+      domain_name: www.techops.com
+      domain: techops
+      http_conf: techops.conf
       http_port: 80
       disable_default: true
 
@@ -30,16 +30,16 @@ Example Playbook
 
 Just apply the role, and supply the required vars:
 
-  - name: Install ql_common_linux and webserver roles
+  - name: Install common_linux and webserver roles
     hosts: launched
     become: True
     gather_facts: True
     vars:
       ansible_ssh_common_args: "-o StrictHostKeyChecking=no"      
       ansible_ssh_user: "ec2-user"
-      domain_name: www.qantastechops.com
-      domain: qantastechops
-      http_conf: qantastechops.conf
+      domain_name: www.techops.com
+      domain: techops
+      http_conf: techops.conf
       http_port: 80
       disable_default: true
     roles:
@@ -48,7 +48,9 @@ Just apply the role, and supply the required vars:
 License
 -------
 
-Commercial
+BSD
 
 Author Information
 ------------------
+
+Alex Gibson

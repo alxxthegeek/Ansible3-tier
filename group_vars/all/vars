@@ -1,19 +1,31 @@
 ---
 
 region: ap-southeast-2
-zone_1: ap-southeast-2a
-zone_2: ap-southeast-2b
-zone_3: ap-southeast-2c
 
-region: ap-southeast-2
-
-#VPC
-vpc_cidr: 10.10.0.0/24
+#vpc-----------
 vpc_name: "ThreeTier"
+vpc_region: "{{ region }}"
+vpc_cidr: 10.0.0.0/16
 
-#SUBNET
-subnet_name: "Webserver Subnet"
-subnet_cidr: 10.10.0.0/26
+public_az_1: "{{ vpc_region }}a"
+public_az_2: "{{ vpc_region }}b"
+public_az_3: "{{ vpc_region }}c"
+
+public_cidr_1: 10.0.1.0/24
+public_cidr_2: 10.0.2.0/24
+public_cidr_3: 10.0.3.0/24
+
+private_az_1: "{{ vpc_region }}a"
+private_az_2: "{{ vpc_region }}b"
+private_az_3: "{{ vpc_region }}c"
+
+private_cidr_1: 10.0.4.0/24
+private_cidr_2: 10.0.5.0/24
+private_cidr_3: 10.0.6.0/24
+
+
+#VPC SUBNETs
+subnet_name: "{{ vpc_name }} Webserver Subnet"
 
 #GATEWAY
 igw_name: "Public IGW"
@@ -21,10 +33,32 @@ igw_name: "Public IGW"
 #route table name
 route_name: "Public Webserver Access"
 
-#Security Groups
-security_group_name: "public-webserver" 
+vpc_public_net1: {"subnet":"10.0.1.0/24", "az": "ap-southeast-2a"}
+vpc_public_net2: {"subnet":"10.0.2.0/24", "az": "ap-southeast-2b"}
+vpc_public_net3: {"subnet":"10.0.3.0/24", "az": "ap-southeast-2c"}
 
-#EC2
+vpc_private_net1: {"subnet":"10.0.1.0/24", "az": "ap-southeast-2a"}
+vpc_private_net2: {"subnet":"10.0.2.0/24", "az": "ap-southeast-2b"}
+vpc_private_net3: {"subnet":"10.0.3.0/24", "az": "ap-southeast-2c"}
+
+#Security Groups
+security_group_name: "Public-Webserver" 
+
+#elb--------------------------------------------------------------------------------
+load_balancer_name: "{{ vpc_name }}-{{ server_role }}-elb"
+elb_purge_subnets: yes
+elb_cross_az_load_balancing: yes
+elb_ping_protocol: tcp
+elb_ping_port: 80
+elb_response_timeout: 5
+elb_interval: 30
+elb_unhealthy_threshold: 2
+elb_healthy_threshold: 10
+elb_connection_draining_timeout: 60 
+
+
+#EC2 web Server
+webserver_user: web_user
 instance_type: "t3.medium"
 webServerCount: 1
 image: ami-0970010f37c4f9c8d  # Amazon Linux2 in ap-southeast-2 -  ami-0970010f37c4f9c8d (64-bit x86) 

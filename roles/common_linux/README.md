@@ -30,7 +30,7 @@ Just apply the role, no vars required:
 License
 -------
 
-Commercial
+BSD
 
 Author Information
 ------------------
