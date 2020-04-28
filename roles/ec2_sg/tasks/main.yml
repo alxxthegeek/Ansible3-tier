@@ -1,0 +1,84 @@
+---
+# tasks file for ec2_sg
+
+- name: Create a security group
+  local_action: 
+    module: ec2_group
+    name: "{{ vpc_name}}-public-web"
+    description: Security Group for Web Servers
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+  register: web_security_group
+
+- name: Create internal web Security Group
+  local_action: 
+    module: ec2_group
+    name:  "{{ vpc_name}}-internal-web"
+    description: "{{ vpc_name }}-Public-ELB security group "
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region }}"
+    rules:
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: 10.0.1.0/24
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: 10.0.2.0/24
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: 10.0.3.0/24  
+  register: internal_web_group    
+
+
+- name: Create SSH security group
+  local_action: 
+    module: ec2_group
+    name: "{{ vpc_name}}-vpc-ssh"
+    region: "{{ region }}"
+    description: allow ssh access
+    vpc_id: "{{ vpc_id }}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: "{{control_ip}}"
+
+- name: Create outbound Security Group
+  local_action: 
+    module: ec2_group
+    name: "{{ vpc_name}}-vpc-outbound"
+    description: allow outbound connections to the internet
+    region: "{{ region }}"
+    vpc_id: "{{ vpc_id }}"
+    rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+
+- name: Create the DB security group (mysql)
+  ec2_group:
+    name: "{{ vpc_name}}-database"
+    region: "{{ region }}"
+    description: SGSecurity group to allow access to db (mysql) from web servers
+    vpc_id: "{{ vpc_id }}"
+    rules:
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        cidr_ip: 10.0.1.0/24
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        cidr_ip: 10.0.2.0/24
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        cidr_ip: 10.0.3.0/24  
+  register: db_sec_group

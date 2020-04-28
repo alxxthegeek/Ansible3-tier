@@ -1,0 +1,32 @@
+---
+# tasks file for ec2_ami
+
+# Check if there is an existing ami of the same name
+- name: Get existing ami name
+  ec2_ami_info:
+    region: "{{ region }}"
+    owners: "self"
+  register: ami_result
+  ignore_errors: True
+
+
+# Deregister/Delete AMI (keep associated snapshots) if it exists otherwise ignore the error
+- name: Delete an AMI
+  ec2_ami:
+      image_id: "{{ ami_result.images[0].image_id }}"
+      delete_snapshot: True
+      state: absent
+      wait: yes
+  register: ami_del_res
+  tags: ami_delete
+  ignore_errors: True
+
+# Create ami with name defined in variable in top level playbook
+- name: Creating the AMI from the instance
+  ec2_ami:
+    instance_id: "{{ item.id }}"
+    wait: yes
+    name: "{{ ami_name }}"
+  delegate_to: 127.0.0.1
+  with_items: "{{ ec2.instances }}"
+  register: instance

@@ -1,0 +1,87 @@
+---
+# tasks file for ec2_vpc
+
+- name: Create VPC
+  local_action: 
+    module: ec2_vpc_net
+    region: "{{ vpc_region }}"
+    state: present
+    name: "{{ vpc_name }}"
+    resource_tags: { "Name":"{{ vpc_name }}-vpc" }
+    cidr_block: "{{ vpc_cidr }}"
+  register: vpc
+
+- name: Set VPC ID in variable
+  set_fact:
+    vpc_id: "{{ vpc.vpc.id }}"  
+
+- name: Create Public Subnets
+  local_action: 
+    module: ec2_vpc_subnet
+    state: present
+    vpc_id: "{{ vpc_id }}"
+    cidr: "{{ item.subnet }}"
+    az: "{{ item.az }}"
+    region: "{{ vpc_region }}"
+  with_items:
+    - "{{ vpc_public_net1 }}"
+    - "{{ vpc_public_net2 }}"  
+    - "{{ vpc_public_net3 }}"  
+  register: subnet_info
+
+- name: Get subnet info
+  local_action: 
+    module: ec2_vpc_subnet_info
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: subnet_data    
+
+- name: test1
+  debug:    
+    msg: "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2a') | list | first).id }}"  
+
+- name: test2
+  debug:    
+    msg: "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2b') | list | first).id }}"  
+    
+- name: test3
+  debug:    
+    msg: "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2c') | list | first).id }}"       
+
+- name: Set public_subnet_1 as variable
+  set_fact:
+    public_subnet_1:  "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2a') | list | first).id }}"
+
+- name: Set public_subnet_2 as variable
+  set_fact:
+    public_subnet_2:  "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2b') | list | first).id }}"
+
+- name: Set public_subnet_3 as variable
+  set_fact:
+    public_subnet_3:  "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2c') | list | first).id }}"    
+
+- name: Create IGW
+  ec2_vpc_igw:
+   vpc_id: "{{ vpc_id }}"
+   region: "{{ region }}"
+   state: "present"
+   tags:
+     Name: "{{ igw_name }}"
+  register: igw  
+
+- name: Create IGW Routes
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region }}"
+    subnets:
+      - "{{ public_subnet_1 }}"
+      - "{{ public_subnet_2 }}"
+      - "{{ public_subnet_3 }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id  }}"
+    tags:
+     Name: 
+       - "{{ route_name }}"
+       - "Public"
+

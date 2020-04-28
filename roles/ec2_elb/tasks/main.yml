@@ -1,0 +1,30 @@
+---
+# tasks file for ec2_elb
+
+- name: Create the ELB only listening over port 80
+  ec2_elb_lb:
+    name: "{{ vpc_name }}-WebServer-elb"
+    security_group_ids: ["{{ web_security_group.group_id }}"]
+    state: present
+    region: "{{ region }}"
+    purge_subnets: yes
+    cross_az_load_balancing: "{{ elb_cross_az_load_balancing }}"
+    connection_draining_timeout: "{{ elb_connection_draining_timeout }}"
+    subnets: 
+      - "{{ public_subnet_1 }}"
+      - "{{ public_subnet_2 }}"
+      - "{{ public_subnet_3 }}"
+    listeners:
+    - protocol: http
+      load_balancer_port: 80
+      instance_protocol: http
+      instance_port: 80
+    health_check:
+      ping_protocol: "{{ elb_ping_protocol }}"
+      ping_port: "{{ elb_ping_port }}"
+      response_timeout: "{{ elb_response_timeout }}"
+      interval: "{{ elb_interval }}"
+      unhealthy_threshold: "{{ elb_unhealthy_threshold }}"
+      healthy_threshold: "{{ elb_healthy_threshold }}"
+  register: webserver_elb 
+  

@@ -8,22 +8,13 @@
     
     # Role that will be used to Launch/Create an EC2 Instance
     roles:
-    - {role: ec2_base}
+    - {role: ec2_key}
+    - {role: ec2_vpc}
+    - {role: ec2_sg}
+    - {role: ec2_elb}
+    - {role: ec2_instance}
+    - {role: common_linux}
+    - {role: webserver}
 
-  - name: Install common_linux and webserver roles
-    hosts: launched
-    become: True
-    gather_facts: True
-    vars:
-      ansible_ssh_common_args: "-o StrictHostKeyChecking=no"      
-      ansible_ssh_user: "ec2-user"
-      domain_name: www.testops.com
-      domain: testops
-      http_conf: testops.conf
-      http_port: 80
-      disable_default: true
-    roles:
-      - {role: common_linux}
-      - {role: webserver}
 
 
