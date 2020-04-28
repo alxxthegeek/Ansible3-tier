@@ -1,16 +1,63 @@
 ---
 # tasks file for rds_mysql
 
-- name: Create RDS subnet
-  rds_subnet_group:
-    name: "{{ vpc }}-database-subnet-group"
-    region: "{{ region }}"
+- name: Create Database Subnets
+  local_action: 
+    module: ec2_vpc_subnet
     state: present
-    description: "RDS subnet group for {{ vpc }}"
-    subnets:
+    vpc_id: "{{ vpc_id }}"
+    cidr: "{{ item.subnet }}"
+    az: "{{ item.az }}"
+    region: "{{ vpc_region }}"
+  with_items:
       - "{{ db_tier_net_1 }}"
       - "{{ db_tier_net_2 }}"
       - "{{ db_tier_net_3 }}"
+  register: db_subnet_info
+
+- name: Get subnet info
+  local_action: 
+    module: ec2_vpc_subnet_info
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: subnet_data    
+
+- name: test1
+  debug:    
+    msg: "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2a') | list | first).id }}"  
+
+- name: test2
+  debug:    
+    msg: "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2b') | list | first).id }}"  
+    
+- name: test3
+  debug:    
+    msg: "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2c') | list | first).id }}"       
+
+- name: Set public_subnet_1 as variable
+  set_fact:
+    db_subnet_1:  "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2a') | list | first).id }}"
+
+- name: Set public_subnet_2 as variable
+  set_fact:
+    db_subnet_2:  "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2b') | list | first).id }}"
+
+- name: Set public_subnet_3 as variable
+  set_fact:
+    db_subnet_3:  "{{ (subnet_data.subnets |  selectattr('availability_zone', 'search', 'ap-southeast-2c') | list | first).id }}"    
+
+
+- name: Create RDS subnet group
+  local_action:
+    module: rds_subnet_group
+    name: "threetier-database-sg"
+    region: "{{ region }}"
+    state: present
+    description: "RDS subnet group for threetier"
+    subnets:
+      - "{{ db_subnet_1 }}"
+      - "{{ db_subnet_2 }}"
+      - "{{ db_subnet_3 }}"
 
 - name: Create RDS database (this can take a while)
   rds:
@@ -24,7 +71,7 @@
     username: "{{ db.user }}"
     password: "{{ db.password }}"
     tags: { Name: "{{ vpc }}-db", type: db, env: "{{ vpc }}" }
-    subnet: "{{ vpc }}-database-subnet-group"
+    subnet: "{{ vpc}}-database-sg"
     vpc_security_groups: ["{{ db_sec_group.group_id }}"]
     wait: yes
     wait_timeout: 1200
