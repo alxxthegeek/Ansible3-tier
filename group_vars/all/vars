@@ -17,25 +17,14 @@ public_cidr_1: 10.0.1.0/24
 public_cidr_2: 10.0.2.0/24
 public_cidr_3: 10.0.3.0/24
 
-private_az_1: "{{ vpc_region }}a"
-private_az_2: "{{ vpc_region }}b"
-private_az_3: "{{ vpc_region }}c"
-
-private_cidr_1: 10.0.4.0/24
-private_cidr_2: 10.0.5.0/24
-private_cidr_3: 10.0.6.0/24
 
 vpc_public_net1: {"subnet":"10.0.1.0/24", "az": "ap-southeast-2a"}
 vpc_public_net2: {"subnet":"10.0.2.0/24", "az": "ap-southeast-2b"}
 vpc_public_net3: {"subnet":"10.0.3.0/24", "az": "ap-southeast-2c"}
 
-vpc_private_net1: {"subnet":"10.0.1.0/24", "az": "ap-southeast-2a"}
-vpc_private_net2: {"subnet":"10.0.2.0/24", "az": "ap-southeast-2b"}
-vpc_private_net3: {"subnet":"10.0.3.0/24", "az": "ap-southeast-2c"}
-
-db_tier_net_1:  {"subnet":"10.0.4.0/24", "az": "ap-southeast-2a"}
-db_tier_net_2:  {"subnet":"10.0.5.0/24", "az": "ap-southeast-2a"}
-db_tier_net_3:  {"subnet":"10.0.6.0/24", "az": "ap-southeast-2a"}
+db_tier_net_1: {"subnet":"10.0.4.0/24", "az": "ap-southeast-2a"}
+db_tier_net_2: {"subnet":"10.0.5.0/24", "az": "ap-southeast-2a"}
+db_tier_net_3: {"subnet":"10.0.6.0/24", "az": "ap-southeast-2a"}
 
 subnet_name: "{{ vpc_name }} Webserver Subnet"
 
@@ -79,9 +68,10 @@ domain: techops
 
 # DB ---------------------------------------------------------------------------------
 
-db:
-  instance_type: db.t2.micro
-  size: 5
-  name: test123
-  user: test123
-  password: password123
+db_engine: MySQL
+db_name: jrings
+db_instance_type: db.t2.small
+db_size: 10
+db_username: test123
+db_user: test123
+db_password: password123

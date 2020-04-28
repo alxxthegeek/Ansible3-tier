@@ -60,16 +60,19 @@
       - "{{ db_subnet_3 }}"
 
 - name: Create RDS database (this can take a while)
-  rds:
+  local_action:
+    module: rds
     command: create
     instance_name: "{{ vpc }}-db"
     region: "{{ region }}"
-    db_engine: MySQL
-    size: "{{ db.size }}"
-    instance_type: "{{ db.instance_type }}"
+    db_name: "{{ db_name }}"
+    db_engine: "{{ db_engine}}"
+    size: "{{ db_size }}"
+    instance_type: "{{ db_instance_type }}"
+    publicly_accessible: no
     multi_zone: yes
-    username: "{{ db.user }}"
-    password: "{{ db.password }}"
+    username: "{{ db_user }}"
+    password: "{{ db_password }}"
     tags: { Name: "{{ vpc }}-db", type: db, env: "{{ vpc }}" }
     subnet: "{{ vpc}}-database-sg"
     vpc_security_groups: ["{{ db_sec_group.group_id }}"]
