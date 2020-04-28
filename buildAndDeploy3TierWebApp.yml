@@ -13,8 +13,9 @@
     - {role: ec2_sg}
     - {role: ec2_elb}
     - {role: ec2_instance}
+    - {role: rds_mysql}
     - {role: common_linux}
     - {role: webserver}
-
+    - {role: webserver}
 
 

@@ -64,7 +64,7 @@
 
 - name: Create the DB security group (mysql)
   ec2_group:
-    name: "{{ vpc_name}}-database"
+    name: "{{ vpc_name}}-database-sg"
     region: "{{ region }}"
     description: SGSecurity group to allow access to db (mysql) from web servers
     vpc_id: "{{ vpc_id }}"

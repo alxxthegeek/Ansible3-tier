@@ -2,8 +2,10 @@
 
 region: ap-southeast-2
 
+control_ip: 220.239.243.0/16
+
 #vpc-----------
-vpc_name: "ThreeTier"
+vpc_name: "threetier"
 vpc_region: "{{ region }}"
 vpc_cidr: 10.0.0.0/16
 
@@ -23,16 +25,6 @@ private_cidr_1: 10.0.4.0/24
 private_cidr_2: 10.0.5.0/24
 private_cidr_3: 10.0.6.0/24
 
-
-#VPC SUBNETs
-subnet_name: "{{ vpc_name }} Webserver Subnet"
-
-#GATEWAY
-igw_name: "Public IGW"
-
-#route table name
-route_name: "Public Webserver Access"
-
 vpc_public_net1: {"subnet":"10.0.1.0/24", "az": "ap-southeast-2a"}
 vpc_public_net2: {"subnet":"10.0.2.0/24", "az": "ap-southeast-2b"}
 vpc_public_net3: {"subnet":"10.0.3.0/24", "az": "ap-southeast-2c"}
@@ -41,12 +33,23 @@ vpc_private_net1: {"subnet":"10.0.1.0/24", "az": "ap-southeast-2a"}
 vpc_private_net2: {"subnet":"10.0.2.0/24", "az": "ap-southeast-2b"}
 vpc_private_net3: {"subnet":"10.0.3.0/24", "az": "ap-southeast-2c"}
 
+db_tier_net_1:  {"subnet":"10.0.4.0/24", "az": "ap-southeast-2a"}
+db_tier_net_2:  {"subnet":"10.0.5.0/24", "az": "ap-southeast-2a"}
+db_tier_net_3:  {"subnet":"10.0.6.0/24", "az": "ap-southeast-2a"}
+
+subnet_name: "{{ vpc_name }} Webserver Subnet"
+
 #Security Groups
 security_group_name: "Public-Webserver" 
 
-#elb--------------------------------------------------------------------------------
-load_balancer_name: "{{ vpc_name }}-{{ server_role }}-elb"
-elb_purge_subnets: yes
+# GATEWAY --------------------------------------------------------------------------------
+igw_name: "Public IGW"
+
+#route table name
+route_name: "Public Webserver Access"
+
+
+# ELB --------------------------------------------------------------------------------
 elb_cross_az_load_balancing: yes
 elb_ping_protocol: tcp
 elb_ping_port: 80
@@ -54,20 +57,31 @@ elb_response_timeout: 5
 elb_interval: 30
 elb_unhealthy_threshold: 2
 elb_healthy_threshold: 10
-elb_connection_draining_timeout: 60 
+elb_connection_draining_timeout: 60
 
-
-#EC2 web Server
+# EC2 Web Server Instance ------------------------------------------------------------
 webserver_user: web_user
 instance_type: "t3.medium"
 webServerCount: 1
 image: ami-0970010f37c4f9c8d  # Amazon Linux2 in ap-southeast-2 -  ami-0970010f37c4f9c8d (64-bit x86) 
+http_conf: testops.conf
+http_port: 80
 
+# KEY --------------------------------------------------------------------------------
 keypair: awskeykey 
 
 ansible_ssh_private_key_file: "~/.ssh/awskeykey.pem"
 ansible_ssh_user: ec2-user
 
-#DNS
+# DNS --------------------------------------------------------------------------------
 domain_name: www.techops.com
 domain: techops
+
+# DB ---------------------------------------------------------------------------------
+
+db:
+  instance_type: db.t2.micro
+  size: 5
+  name: test123
+  user: test123
+  password: password123

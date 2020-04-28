@@ -1,29 +1,30 @@
 ---
 # tasks file for rds_mysql
 
+- name: Create RDS subnet
+  rds_subnet_group:
+    name: "{{ vpc }}-database-subnet-group"
+    region: "{{ region }}"
+    state: present
+    description: "RDS subnet group for {{ vpc }}"
+    subnets:
+      - "{{ db_tier_net_1 }}"
+      - "{{ db_tier_net_2 }}"
+      - "{{ db_tier_net_3 }}"
 
-  - name: Create RDS subnet
-    rds_subnet_group:
-      name: "{{ env }}-db-sng"
-      region: "{{ region }}"
-      state: present
-      description: "RDS subnet group for {{ env }}"
-      subnets:
-        - "{{ db_tier_subnet_1 }}"
-        - "{{ db_tier_subnet_2 }}"
-
-  - name: Create RDS database (this can take a while)
-    rds:
-      command: create
-      instance_name: "{{ env }}-db"
-      db_engine: MySQL
-      size: "{{ db.size }}"
-      instance_type: "{{ db.instance_type }}"
-      multi_zone: yes
-      username: "{{ db.user }}"
-      password: "{{ db.password }}"
-      tags: { Name: "{{ env }}-db", type: db, env: "{{ env }}" }
-      subnet: "{{ env }}-db-sng"
-      vpc_security_groups: ["{{ db_sec_group.group_id }}"]
-      wait: yes
-      wait_timeout: 1200
+- name: Create RDS database (this can take a while)
+  rds:
+    command: create
+    instance_name: "{{ vpc }}-db"
+    region: "{{ region }}"
+    db_engine: MySQL
+    size: "{{ db.size }}"
+    instance_type: "{{ db.instance_type }}"
+    multi_zone: yes
+    username: "{{ db.user }}"
+    password: "{{ db.password }}"
+    tags: { Name: "{{ vpc }}-db", type: db, env: "{{ vpc }}" }
+    subnet: "{{ vpc }}-database-subnet-group"
+    vpc_security_groups: ["{{ db_sec_group.group_id }}"]
+    wait: yes
+    wait_timeout: 1200
