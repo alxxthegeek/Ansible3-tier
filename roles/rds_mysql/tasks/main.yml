@@ -57,24 +57,28 @@
     subnets:
       - "{{ db_subnet_1 }}"
       - "{{ db_subnet_2 }}"
-      - "{{ db_subnet_3 }}"
+      - "{{ db_subnet_3 }}"    
 
 - name: Create RDS database (this can take a while)
   local_action:
     module: rds
     command: create
-    instance_name: "{{ vpc }}-db"
+    instance_name: threetier-rds-mysql
     region: "{{ region }}"
-    db_name: "{{ db_name }}"
-    db_engine: "{{ db_engine}}"
-    size: "{{ db_size }}"
-    instance_type: "{{ db_instance_type }}"
+    db_engine: MySQL
+    size: 10
     publicly_accessible: no
+    instance_type: db.t2.micro
+    db_name: "{{ db_name }}"
+    username: mysql_admin
+    password: 1nsecure
     multi_zone: yes
-    username: "{{ db_user }}"
-    password: "{{ db_password }}"
-    tags: { Name: "{{ vpc }}-db", type: db, env: "{{ vpc }}" }
-    subnet: "{{ vpc}}-database-sg"
-    vpc_security_groups: ["{{ db_sec_group.group_id }}"]
+    subnet: threetier-database-sg
+    vpc_security_groups: "{{ db_sec_group.group_id }}"
     wait: yes
-    wait_timeout: 1200
+    wait_timeout: 900
+    tags:
+      Environment: threetier
+      Name: threetier-db
+      type: db
+  register: rds
